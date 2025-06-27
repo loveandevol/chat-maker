@@ -244,9 +244,10 @@ img[src=""], img:not([src]) {
           <button onclick="addDate()">날짜</button>
           <div id="style-control" style="margin-top: 20px; font-size: .8em;">
   <h4>스타일 설정</h4>
-  <div>상대 말풍선: [색상] <button id="youColorPicker"></button> 글씨색: <button id="youTextColorPicker"></button></div>
+            <p style="color: #aaaaaa;">코드는 URL, 사진 저장은 파일 업로드 추천</p>
+  <div>상대 말풍선 색상: <button id="youColorPicker"></button> 글씨색: <button id="youTextColorPicker"></button></div>
   <div>테두리색: <input type="checkbox" id="youBorderEnabled"> <button id="youBorderColorPicker"></button></div>
-  <div>나 말풍선: [색상] <button id="meColorPicker"></button> 글씨색: <button id="meTextColorPicker"></button></div>
+  <div>내 말풍선 색상: <button id="meColorPicker"></button> 글씨색: <button id="meTextColorPicker"></button></div>
   <div>테두리색: <input type="checkbox" id="meBorderEnabled"> <button id="meBorderColorPicker"></button> 두께: <input type="number" id="borderWidth" value="1" min="0" style="width: 50px;"></div>
 <div>시간 글씨색: <button id="timeColorPicker"></button></div>
 <div>이름 글씨색: <button id="nameColorPicker"></button></div>
@@ -254,29 +255,7 @@ img[src=""], img:not([src]) {
 <div>날짜 글씨색: <button id="dateTextColorPicker"></button></div>
 <div>말풍선 둥글기: <input type="number" id="bubbleRadius" value="10" min="0" style="width: 50px;"> px</div>
 <div>배경색: <button id="bgColorPicker"></button></div>
-<div> 이미지 URL: <input type="text" id="bgImageUrl" placeholder="이미지 URL 입력"></div>
-
-  <!-- <div>말풍선 (상대): <button id="youColorPicker"></button></div>
-  <div>글씨색 (상대): <button id="youTextColorPicker"></button></div>
-  <div>말풍선 (나): <button id="meColorPicker"></button></div>
-  <div>글씨색 (나): <button id="meTextColorPicker"></button></div>
-  <div>시간 글씨색: <button id="timeColorPicker"></button></div>
-  <div>이름 글씨색: <button id="nameColorPicker"></button></div>
-  <div>날짜 배경색: <button id="dateBgColorPicker"></button></div>
-  <div>날짜 글씨색: <button id="dateTextColorPicker"></button></div>
-  
-  <label>말풍선 border-radius (px): <input type="number" id="bubbleRadius" value="10" min="0" style="width: 60px;"></label><br>
-  
-  <h4>테두리 설정</h4>
-  <label>상대 테두리 사용: <input type="checkbox" id="youBorderEnabled"></label><br>
-  <label>나 테두리 사용: <input type="checkbox" id="meBorderEnabled"></label><br>
-  <div>테두리 색 (상대): <button id="youBorderColorPicker"></button></div>
-  <div>테두리 색 (나): <button id="meBorderColorPicker"></button></div>
-  <label>테두리 두께 (px): <input type="number" id="borderWidth" value="1" min="0" style="width: 60px;"></label><br><br>
-
-  <h4>배경 설정</h4>
-  <div>배경색: <button id="bgColorPicker"></button></div>
-  <label>배경 이미지 URL: <input type="text" id="bgImageUrl" placeholder="이미지 URL 입력"></label><br> -->
+<div> 배경 이미지 URL: <input type="text" id="bgImageUrl" placeholder="이미지 URL 입력"></div>
 
   <button onclick="applyStyles()">스타일 적용</button>
 </div>
