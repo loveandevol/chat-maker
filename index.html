@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
+  <title>채팅 생성기</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #eee;
+      display: flex;
+      padding: 20px;
+      justify-content: center;
+    }
+    .container {
+      display: flex;
+      width: 100%;
+      max-width: 1200px;
+    }
+    .left-panel, .right-panel {
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .left-panel{width: 70%;}
+    .right-panel{width: 30%;}
+    #chat-area {
+      display: flex;
+      gap: 10px;
+    }
+    #controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #controls > button {
+        width: 50px;
+    }
+    #style-control div, #style-control label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background-color: #444;
+      color: white;
+    }
+    #preview {
+      /* flex: 1; */
+      /* height: 640px; */
+      background: #cbe1fc url('https://t1.kakaocdn.net/kakaocorp/kakaotalk/m/images/bg_chatroom.png') repeat;
+      border-radius: 30px;
+      overflow-y: auto;
+      padding: 20px;
+      position: relative;
+      width: 350px;
+    }
+    .message {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .message.you {
+      justify-content: flex-start;
+    }
+    .message.me {
+      /* justify-content: flex-end; */
+      flex-direction: row-reverse;
+    }
+    .bubble-wrapper {
+        width: 100%;
+      display: flex;
+      align-items: flex-end;
+      gap: 7px;
+    }
+    .message.me .bubble-wrapper {
+      flex-direction: row-reverse;
+    }
+    .bubble {
+      max-width: 70%;
+      padding: 8px 12px;
+      border-radius: 10px;
+      position: relative;
+      background: white;
+    }
+    .bubble[contenteditable="true"]:focus {
+      outline: 2px dashed #888;
+    }
+    .me .bubble {
+      background: #c1f16c;
+    }
+    .message.you .bubble {
+        border-top-left-radius: 0;
+    }
+
+    .message.me .bubble {
+        border-top-right-radius: 0;
+    }
+
+    .time {
+      font-size: 12px;
+      color: #999;
+      cursor: pointer;
+    }
+
+    .chat-photo {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 5px;
+    }
+
+    .bubble-wrapper img {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 8px;
+    }
+
+.delete {
+  background: red;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+    .message.me .delete {
+      order: 1;
+      margin-left: 4px;
+      margin-right: 0;
+    }
+    .profile-pic {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      margin-right: 6px;
+      object-fit: cover;
+    }
+    .profile-pic.empty {
+  background: transparent;
+  width: 36px;
+  height: 36px;
+  display: inline-block;
+}
+    .profile-pic.empty,
+.bubble-wrapper img:empty,
+.bubble-wrapper img[src=""] {
+  display: inline-block;
+  background: transparent;
+  border: none;
+}
+img[src=""], img:not([src]) {
+  display: none;
+}
+    .content {
+      display: flex;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .name-bubble {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .sender-name {
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: #666;
+    }
+    .date-divider {
+      text-align: center;
+      background: rgba(128, 128, 128, 0.6);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 25px;
+      width: fit-content;
+      /* margin: 20px auto; */
+      font-size: 14px;
+    }
+    .date-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px auto;
+    }
+    .message.date {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+    #photoModal, #youModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    #photoModalContent, #youModalContent {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .drag-ghost {
+      opacity: 0.4;
+    }
+    #output {
+      width: 100%;
+      height: 200px;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+    .output-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left-panel">
+      <div id="chat-area">
+        <div id="controls">
+          <button onclick="openYouModal()">상대</button>
+          <button onclick="addMessage('me')">나</button>
+          <button onclick="openPhotoModal()">사진</button>
+          <button onclick="addDate()">날짜</button>
+          <div id="style-control" style="margin-top: 20px; font-size: .8em;">
+  <h4>스타일 설정</h4>
+  <div>상대 말풍선: [색상] <button id="youColorPicker"></button> 글씨색: <button id="youTextColorPicker"></button></div>
+  <div>테두리색: <input type="checkbox" id="youBorderEnabled"> <button id="youBorderColorPicker"></button></div>
+  <div>나 말풍선: [색상] <button id="meColorPicker"></button> 글씨색: <button id="meTextColorPicker"></button></div>
+  <div>테두리색: <input type="checkbox" id="meBorderEnabled"> <button id="meBorderColorPicker"></button> 두께: <input type="number" id="borderWidth" value="1" min="0" style="width: 50px;"></div>
+<div>시간 글씨색: <button id="timeColorPicker"></button></div>
+<div>이름 글씨색: <button id="nameColorPicker"></button></div>
+<div>날짜 배경색: <button id="dateBgColorPicker"></button></div>
+<div>날짜 글씨색: <button id="dateTextColorPicker"></button></div>
+<div>말풍선 둥글기: <input type="number" id="bubbleRadius" value="10" min="0" style="width: 50px;"> px</div>
+<div>배경색: <button id="bgColorPicker"></button></div>
+<div> 이미지 URL: <input type="text" id="bgImageUrl" placeholder="이미지 URL 입력"></div>
+
+  <!-- <div>말풍선 (상대): <button id="youColorPicker"></button></div>
+  <div>글씨색 (상대): <button id="youTextColorPicker"></button></div>
+  <div>말풍선 (나): <button id="meColorPicker"></button></div>
+  <div>글씨색 (나): <button id="meTextColorPicker"></button></div>
+  <div>시간 글씨색: <button id="timeColorPicker"></button></div>
+  <div>이름 글씨색: <button id="nameColorPicker"></button></div>
+  <div>날짜 배경색: <button id="dateBgColorPicker"></button></div>
+  <div>날짜 글씨색: <button id="dateTextColorPicker"></button></div>
+  
+  <label>말풍선 border-radius (px): <input type="number" id="bubbleRadius" value="10" min="0" style="width: 60px;"></label><br>
+  
+  <h4>테두리 설정</h4>
+  <label>상대 테두리 사용: <input type="checkbox" id="youBorderEnabled"></label><br>
+  <label>나 테두리 사용: <input type="checkbox" id="meBorderEnabled"></label><br>
+  <div>테두리 색 (상대): <button id="youBorderColorPicker"></button></div>
+  <div>테두리 색 (나): <button id="meBorderColorPicker"></button></div>
+  <label>테두리 두께 (px): <input type="number" id="borderWidth" value="1" min="0" style="width: 60px;"></label><br><br>
+
+  <h4>배경 설정</h4>
+  <div>배경색: <button id="bgColorPicker"></button></div>
+  <label>배경 이미지 URL: <input type="text" id="bgImageUrl" placeholder="이미지 URL 입력"></label><br> -->
+
+  <button onclick="applyStyles()">스타일 적용</button>
+</div>
+
+        </div>
+        <div id="preview"></div>
+      </div>
+    </div>
+    <div class="right-panel">
+      <textarea id="output"></textarea>
+      <div class="output-controls">
+        <button onclick="generateCode()">코드 생성</button>
+        <button onclick="copyCode()">코드 복사</button>
+        <button onclick="saveImage()">사진 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="photoModal">
+    <div id="photoModalContent">
+      <label>보내는 사람:
+        <select id="photoSender">
+          <option value="you">상대</option>
+          <option value="me">나</option>
+        </select>
+      </label>
+      <label>URL로 추가: <input type="text" id="photoUrl" placeholder="이미지 URL 입력"></label>
+      <label>파일 업로드: <input type="file" id="photoFile"></label>
+
+    <div id="photoExtra" style="display: none;">
+        <label style="display: block;">이름: <input type="text" id="photoName"></label>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+            <label>프로필 사진 URL: <input type="text" id="photoPicUrl" placeholder="이미지 URL 입력"></label>
+            <label>또는 파일 업로드: <input type="file" id="photoPicFile"></label>
+        </div>
+    </div>
+
+
+      <button onclick="insertPhoto()">삽입</button>
+      <button onclick="closePhotoModal()">닫기</button>
+    </div>
+  </div>
+
+  <div id="youModal">
+    <div id="youModalContent">
+      <label>이름: <input type="text" id="youName"></label>
+      <label>프로필 사진 URL: <input type="text" id="youPicUrl" placeholder="이미지 URL 입력"></label>
+      <label>또는 파일 업로드: <input type="file" id="youPicFile"></label>
+      <button onclick="insertYouMessage()">삽입</button>
+      <button onclick="closeYouModal()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+  // Pickr 공통 옵션
+const commonComponents = {
+  preview: true,
+  opacity: true,
+  hue: true,
+  interaction: {
+    input: true,
+    rgba: true,
+    save: true
+  }
+};
+
+  const pickrs = {
+  youBubble: Pickr.create({ el: '#youColorPicker', theme: 'classic', default: 'rgba(255,255,255,1)', components: commonComponents }),
+  youText: Pickr.create({ el: '#youTextColorPicker', theme: 'classic', default: 'rgba(0,0,0,1)', components: commonComponents }),
+  meBubble: Pickr.create({ el: '#meColorPicker', theme: 'classic', default: 'rgba(193,241,108,1)', components: commonComponents }),
+  meText: Pickr.create({ el: '#meTextColorPicker', theme: 'classic', default: 'rgba(0,0,0,1)', components: commonComponents }),
+  time: Pickr.create({ el: '#timeColorPicker', theme: 'classic', default: 'rgba(153,153,153,1)', components: commonComponents }),
+  name: Pickr.create({ el: '#nameColorPicker', theme: 'classic', default: 'rgba(102,102,102,1)', components: commonComponents }),
+  dateBg: Pickr.create({ el: '#dateBgColorPicker', theme: 'classic', default: 'rgba(128,128,128,0.6)', components: commonComponents }),
+  dateText: Pickr.create({ el: '#dateTextColorPicker', theme: 'classic', default: 'rgba(255,255,255,1)', components: commonComponents }),
+  youBorder: Pickr.create({ el: '#youBorderColorPicker', theme: 'classic', default: 'rgba(0,0,0,1)', components: commonComponents }),
+  meBorder: Pickr.create({ el: '#meBorderColorPicker', theme: 'classic', default: 'rgba(0,0,0,1)', components: commonComponents }),
+  bg: Pickr.create({ el: '#bgColorPicker', theme: 'classic', default: 'rgba(203,225,252,1)', components: commonComponents })
+};
+
+const colors = {};  // 색 저장
+
+Object.entries(pickrs).forEach(([key, picker]) => {
+  colors[key] = picker.getColor().toRGBA().toString();  // 초기값 저장
+  picker.on('save', (color) => {
+    colors[key] = color.toRGBA().toString();
+  });
+});
+
+
+
+    function addMessage(type) {
+      const message = document.createElement('div');
+      message.className = `message ${type}`;
+      const deleteBtn = `<div class="delete" onclick="this.parentElement.remove()">×</div>`;
+      const bubbleTime = `
+        <div class="bubble-wrapper">
+          <div class="bubble" contenteditable="true">내용을 입력하세요</div>
+          <span class="time" contenteditable="true">00:00</span>
+        </div>`;
+      message.innerHTML = `${deleteBtn}${bubbleTime}`;
+      document.getElementById('preview').appendChild(message);
+    }
+
+    function openYouModal() {
+      document.getElementById('youModal').style.display = 'flex';
+    }
+
+    function closeYouModal() {
+      document.getElementById('youModal').style.display = 'none';
+      document.getElementById('youName').value = '';
+      document.getElementById('youPicUrl').value = '';
+      document.getElementById('youPicFile').value = '';
+    }
+
+    function insertYouMessage() {
+      const name = document.getElementById('youName').value;
+      const picUrl = document.getElementById('youPicUrl').value;
+      const fileInput = document.getElementById('youPicFile');
+
+      const message = document.createElement('div');
+      message.className = 'message you';
+
+      const deleteBtn = `<div class="delete" onclick="this.parentElement.remove()">×</div>`;
+      const time = `<span class="time" contenteditable="true">00:00</span>`;
+
+      const profile = document.createElement('img');
+      profile.className = 'profile-pic';
+
+      const nameBubble = document.createElement('div');
+      nameBubble.className = 'name-bubble';
+      const nameHtml = name ? `<div class="sender-name">${name}</div>` : '';
+      const bubbleTime = `
+        <div class="bubble-wrapper">
+          <div class="bubble" contenteditable="true">내용을 입력하세요</div>
+          ${time}
+        </div>`;
+      nameBubble.innerHTML = `${nameHtml}${bubbleTime}`;
+
+      const content = document.createElement('div');
+      content.className = 'content';
+      content.appendChild(profile);
+      content.appendChild(nameBubble);
+
+      const appendMessage = () => {
+        message.innerHTML = deleteBtn;
+        message.appendChild(content);
+        document.getElementById('preview').appendChild(message);
+      };
+
+      if (picUrl) {
+  profile.src = picUrl;
+  appendMessage();
+  closeYouModal();
+      } else if (fileInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          profile.src = e.target.result;
+          appendMessage();
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+        closeYouModal();
+      } else {
+        profile.classList.add('empty');
+  appendMessage();
+  closeYouModal();
+      }
+    }
+
+    function openPhotoModal() {
+      document.getElementById('photoModal').style.display = 'flex';
+    }
+
+    function closePhotoModal() {
+      document.getElementById('photoModal').style.display = 'none';
+      document.getElementById('photoUrl').value = '';
+      document.getElementById('photoFile').value = '';
+      document.getElementById('photoName').value = '';
+      document.getElementById('photoPicUrl').value = '';
+      document.getElementById('photoPicFile').value = '';
+    }
+
+    document.getElementById('photoSender').addEventListener('change', function () {
+      document.getElementById('photoExtra').style.display = this.value === 'you' ? 'block' : 'none';
+    });
+
+    function insertPhoto() {
+  const sender = document.getElementById('photoSender').value;
+  const url = document.getElementById('photoUrl').value;
+  const fileInput = document.getElementById('photoFile');
+
+  const message = document.createElement('div');
+  message.className = `message ${sender}`;
+
+  const deleteBtn = `<div class="delete" onclick="this.parentElement.remove()">×</div>`;
+  const time = `<span class="time" contenteditable="true">00:00</span>`;
+  const bubbleWrapper = (src) => `
+    <div class="bubble-wrapper">
+      <img src="${src}" class="chat-photo" alt="사진">
+      ${time}
+    </div>`;
+
+  const buildYouMessage = (imgSrc, name, profileSrc) => {
+    const profileImg = profileSrc 
+  ? `<img class="profile-pic" src="${profileSrc}">`
+  : `<div class="profile-pic empty"></div>`;
+
+
+    const nameHtml = name ? `<div class="sender-name">${name}</div>` : '';
+    return `
+      ${deleteBtn}
+      <div class="content">
+        ${profileImg}
+        <div class="name-bubble">
+          ${nameHtml}
+          ${bubbleWrapper(imgSrc)}
+        </div>
+      </div>`;
+  };
+
+  const buildMeMessage = (imgSrc) => {
+    return `${deleteBtn}${bubbleWrapper(imgSrc)}`;
+  };
+
+  const applyAndClose = (imgSrc) => {
+    if (sender === 'you') {
+      const name = document.getElementById('photoName').value;
+      const picUrl = document.getElementById('photoPicUrl').value;
+      const picFile = document.getElementById('photoPicFile');
+
+      if (picUrl) {
+        message.innerHTML = buildYouMessage(imgSrc, name, picUrl);
+        document.getElementById('preview').appendChild(message);
+        closePhotoModal();
+      } else if (picFile.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          message.innerHTML = buildYouMessage(imgSrc, name, e.target.result);
+          document.getElementById('preview').appendChild(message);
+          closePhotoModal();
+        };
+        reader.readAsDataURL(picFile.files[0]);
+      } else {
+        message.innerHTML = buildYouMessage(imgSrc, name, ''); // 빈 src
+  document.getElementById('preview').appendChild(message);
+  closePhotoModal();
+      }
+    } else {
+      message.innerHTML = buildMeMessage(imgSrc);
+      document.getElementById('preview').appendChild(message);
+      closePhotoModal();
+    }
+  };
+
+  if (url) {
+    applyAndClose(url);
+  } else if (fileInput.files.length > 0) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      applyAndClose(e.target.result);
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+  } else {
+    alert('URL이나 파일을 입력해주세요.');
+  }
+}
+
+
+
+    function addDate() {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'message date';
+
+      const inner = document.createElement('div');
+      inner.className = 'date-wrapper';
+
+      const dateDiv = document.createElement('div');
+      dateDiv.className = 'date-divider';
+      dateDiv.contentEditable = 'true';
+      dateDiv.innerText = '오늘';
+
+      const deleteBtn = document.createElement('div');
+      deleteBtn.className = 'delete';
+      deleteBtn.innerText = '×';
+      deleteBtn.onclick = () => wrapper.remove();
+
+      inner.appendChild(dateDiv);
+      inner.appendChild(deleteBtn);
+      wrapper.appendChild(inner);
+      document.getElementById('preview').appendChild(wrapper);
+    }
+
+function generateCode() {
+  hideDeleteButtonsTemporarily(() => {
+    const style = document.querySelector('style').outerHTML;
+    const previewHtml = document.getElementById('preview').outerHTML;
+    document.getElementById('output').value = style + '\n' + previewHtml;
+  });
+}
+
+    function copyCode() {
+      const output = document.getElementById('output');
+      output.select();
+      document.execCommand('copy');
+      alert('코드가 복사되었습니다.');
+    }
+
+function saveImage() {
+  const preview = document.getElementById('preview');
+  const originalRadius = preview.style.borderRadius;
+  preview.style.borderRadius = '0';
+
+  hideDeleteButtonsTemporarily(() => {
+    html2canvas(preview).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'chat.png';
+      link.href = canvas.toDataURL();
+      link.click();
+      preview.style.borderRadius = originalRadius; // 복원
+    });
+  });
+}
+
+
+
+    function hideDeleteButtonsTemporarily(callback) {
+        const deletes = document.querySelectorAll('.delete');
+        deletes.forEach(el => el.style.display = 'none');
+        callback();
+        setTimeout(() => {
+          deletes.forEach(el => el.style.display = '');
+        }, 0);
+    }
+
+
+    document.getElementById('photoSender').addEventListener('change', function () {
+      document.getElementById('photoExtra').style.display = this.value === 'you' ? 'block' : 'none';
+    });
+
+    // ✅ 페이지 로드시 기본 선택값에 따라 표시
+    window.addEventListener('DOMContentLoaded', () => {
+      const sender = document.getElementById('photoSender').value;
+      document.getElementById('photoExtra').style.display = sender === 'you' ? 'block' : 'none';
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new Sortable(document.getElementById('preview'), {
+        animation: 150,
+        ghostClass: 'drag-ghost'
+      });
+    });
+
+    function applyStyles() {
+  const youBorderEnabled = document.getElementById('youBorderEnabled').checked;
+  const meBorderEnabled = document.getElementById('meBorderEnabled').checked;
+
+  const borderWidth = document.getElementById('borderWidth').value + 'px';
+
+  const youBubbles = document.querySelectorAll('.message.you .bubble');
+  const meBubbles = document.querySelectorAll('.message.me .bubble');
+  const radius = document.getElementById('bubbleRadius').value + 'px';
+
+[...youBubbles, ...meBubbles].forEach(el => {
+  el.style.borderRadius = radius;
+});
+
+document.querySelectorAll('.time').forEach(el => {
+    el.style.color = colors.time;
+  });
+
+  document.querySelectorAll('.sender-name').forEach(el => {
+    el.style.color = colors.name;
+  });
+
+  document.querySelectorAll('.date-divider').forEach(el => {
+    el.style.backgroundColor = colors.dateBg;
+    el.style.color = colors.dateText;
+  });
+
+
+   youBubbles.forEach(el => {
+    el.style.backgroundColor = colors.youBubble;
+    el.style.color = colors.youText;
+    el.style.border = youBorderEnabled ? `${borderWidth} solid ${colors.youBorder}` : 'none';
+  });
+
+  meBubbles.forEach(el => {
+    el.style.backgroundColor = colors.meBubble;
+    el.style.color = colors.meText;
+    el.style.border = meBorderEnabled ? `${borderWidth} solid ${colors.meBorder}` : 'none';
+  });
+
+  const bgImageUrl = document.getElementById('bgImageUrl').value.trim();
+  const preview = document.getElementById('preview');
+
+  preview.style.backgroundColor = colors.bg;
+  preview.style.backgroundImage = bgImageUrl ? `url('${bgImageUrl}')` : 'none';
+  preview.style.backgroundRepeat = 'repeat';
+}
+
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body>
+</html>
