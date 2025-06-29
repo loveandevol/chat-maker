@@ -248,6 +248,7 @@ img[src=""], img:not([src]) {
   <div>테두리색: <input type="checkbox" id="youBorderEnabled"> <button id="youBorderColorPicker"></button></div>
   <div>내 말풍선 색상: <button id="meColorPicker"></button> 글씨색: <button id="meTextColorPicker"></button></div>
   <div>테두리색: <input type="checkbox" id="meBorderEnabled"> <button id="meBorderColorPicker"></button> 두께: <input type="number" id="borderWidth" value="1" min="0" style="width: 50px;"></div>
+            <div>글씨 크기: <input type="number" id="fontSizeInput" value="14" min="8" style="width: 50px;"> px</div>
 <div>시간 글씨색: <button id="timeColorPicker"></button></div>
 <div>이름 글씨색: <button id="nameColorPicker"></button></div>
 <div>날짜 배경색: <button id="dateBgColorPicker"></button></div>
@@ -616,9 +617,11 @@ function saveImage() {
   const youBubbles = document.querySelectorAll('.message.you .bubble');
   const meBubbles = document.querySelectorAll('.message.me .bubble');
   const radius = document.getElementById('bubbleRadius').value + 'px';
+      const fontSize = document.getElementById('fontSizeInput').value + 'px';
 
 [...youBubbles, ...meBubbles].forEach(el => {
   el.style.borderRadius = radius;
+  el.style.fontSize = fontSize;
 });
 
 document.querySelectorAll('.time').forEach(el => {
@@ -632,6 +635,7 @@ document.querySelectorAll('.time').forEach(el => {
   document.querySelectorAll('.date-divider').forEach(el => {
     el.style.backgroundColor = colors.dateBg;
     el.style.color = colors.dateText;
+    el.style.fontSize = fontSize;
   });
 
 
